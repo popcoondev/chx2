@@ -1,9 +1,11 @@
+
 <template>
   <div class="piano-keyboard">
     <button
       v-for="note in notes"
       :key="note.label"
-      :class="['keyboard-key', note.color]"
+      :class="['keyboard-key', note.color, { 'active': note.isActive }]"
+
     >
       {{ note.label }}
 
@@ -12,12 +14,25 @@
 </template>
 
 <script>
+import { EventBus } from './eventBus.js';
 export default {
   name: "PianoKeyboard",
   data() {
     return {
       notes: this.generateChromaticNotes(),
     };
+  },
+  created() {
+    EventBus.on('activate-note', this.activateNote);
+    EventBus.on('inactivate-note', this.inactivateNote);
+  },
+  mounted() {
+    EventBus.on('activate-note', this.activateNote);
+    EventBus.on('inactivate-note', this.inactivateNote);
+  },
+  beforeUnmount() {
+    EventBus.off('activate-note', this.activateNote);
+    EventBus.off('inactivate-note', this.inactivateNote);
   },
   methods: {
     generateChromaticNotes() {
@@ -64,7 +79,27 @@ export default {
 
       return flatRotatedNotes;
     },
+    activateNote(noteLabel) {
+      // 指定されたノートをアクティブに設定
+      let notesToActivate = this.notes.filter(note => note.label === noteLabel);
+      console.log(notesToActivate);  // この行を追加
+      if (notesToActivate) {
+        notesToActivate.forEach(note => {
+          note.isActive = true;
+        });
+      }
+
+      // 必要に応じて、他のロジックをここに追加
+    },
+    inactivateNote() {
+      console.log("inactivateNote");
+      // 全てのノートを非アクティブに設定（オプション）
+      this.notes.forEach(note => {
+        note.isActive = false;
+      });
+    }
   },
+
 };
 
 </script>
@@ -95,6 +130,10 @@ export default {
 .keyboard-key.pink {
   background-color: #ff00ff; /* C音 */
   opacity: 0.6;
+}
+
+.keyboard-key.active {
+  background-color: #00FF00; /* アクティブなキーを緑色に */
 }
 
 .keyboard-octave {
