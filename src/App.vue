@@ -1,26 +1,44 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js App"/>
+  <div id="app">
+    <PianoKeyboard />
+    <div class="spacer"></div> 
+    <ChordGrid />
+  </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import PianoKeyboard from './components/PianoKeyboard.vue';
+import ChordGrid from './components/ChordGrid.vue';
 
 export default {
-  name: 'App',
   components: {
-    HelloWorld
+    PianoKeyboard,
+    ChordGrid
   }
-}
+};
 </script>
+
 
 <style>
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+  display: flex;
+  flex-direction: row;
+}
+.keyboard-container {
+  flex: 6;
+  /* その他のスタイル */
+}
+.chord-container {
+  flex: 4;
+  /* その他のスタイル */
+}
+
+.piano-keyboard, .chord-grid {
+  width: 100%; /* 全幅を使用する */
+}
+
+.spacer {
+  height: 20px; /* 間隔の高さ */
+  width: 100%; /* 間隔の幅 */
 }
 </style>
