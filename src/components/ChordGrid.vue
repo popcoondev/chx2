@@ -1,16 +1,26 @@
 
 <template>
-  <div class="chord-grid">
-    <div v-for="(chordType, index) in chordTypes" :key="index" class="chord-row">
-      <button
-        v-for="chordRoot in chordRoots"
-        :key="chordRoot + chordType"
-        :class="['chord-button', { 'highlighted': isActiveChord(chordRoot + chordType) }]"
-        @mousedown="activateChord(chordRoot, chordType)"
-        @mouseup="deactivateChord()"
-      >
-        {{ chordRoot + chordType }}
-      </button>
+  <div class="chord-container">
+    <div class="mode-selector">
+      <label>
+        <input type="radio" class="mode-label" value="click" v-model="mode" /> CLICK MODE
+      </label>
+      <label>
+        <input type="radio" value="toggle" v-model="mode" /> TOGGLE MODE
+      </label>
+    </div>
+    <div class="chord-grid">
+      <div v-for="(chordType, index) in chordTypes" :key="index" class="chord-row">
+        <button
+          v-for="chordRoot in chordRoots"
+          :key="chordRoot + chordType"
+          :class="['chord-button', { 'highlighted': isActiveChord(chordRoot + chordType) }]"
+          @mousedown="handleMouseDown(chordRoot, chordType)"
+          @mouseup="handleMouseUp()"
+        >
+          {{ chordRoot + chordType }}
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -26,12 +36,35 @@ export default {
       notesSequence: ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'],  
       // その他のデータ...
       activeChord: null,
+      mode: 'click',
+
     };
   },
   created() {
     EventBus.on('highlight-chord', this.setActiveChord);
   },
   methods: {
+    handleMouseDown(chordRoot, chordType) {
+      if (this.mode === 'click') {
+        this.setActiveChord(null);
+        this.activateChord(chordRoot, chordType);
+      } else {
+        if(this.activeChord !== chordRoot + chordType) {
+          this.deactivateChord();
+          this.activateChord(chordRoot, chordType);
+          this.setActiveChord(chordRoot + chordType);
+        }
+        else {
+          this.deactivateChord();
+          this.setActiveChord(null);
+        }
+      }
+    },
+    handleMouseUp() {
+      if (this.mode === 'click') {
+        this.deactivateChord();
+      }
+    },
     setActiveChord(chord) {
       this.activeChord = chord;
       console.log("setActiveChord " + chord)
@@ -108,6 +141,16 @@ export default {
 
 /* ChordGrid.vue のスタイル */
 <style>
+.chord-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.mode-selector {
+    margin-bottom: 10px;
+    /* その他のスタイリング */
+}
+
 .chord-grid {
   display: grid;
   grid-template-columns: repeat(12, 1fr); /* 12列のグリッドを定義 */
@@ -124,5 +167,6 @@ export default {
 .highlighted {
   background-color: #0F0;
 }
+
 </style>
 
