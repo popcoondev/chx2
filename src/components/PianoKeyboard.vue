@@ -140,8 +140,18 @@ export default {
 
       this.checkForChord();
     },
-    deactivateNoteFromMidi() {
-      this.inactivateNote();
+//    deactivateNoteFromMidi() {
+//      this.inactivateNote();
+//    },
+    deactivateNoteFromMidi(midiNote) {
+      const appNote = this.convertMidiNoteToAppNote(midiNote);
+      const notesToDeactivate = this.notes.filter(note => 
+        note.label === appNote.note && note.octave === appNote.octave
+      );
+
+      notesToDeactivate.forEach(note => {
+        note.isActive = false;
+      });
     },
     convertMidiNoteToAppNote(midiNote) {
       const notesSequence = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
