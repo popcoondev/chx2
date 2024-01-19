@@ -5,7 +5,7 @@
       <button
         v-for="chordRoot in chordRoots"
         :key="chordRoot + chordType"
-        class="chord-button"
+        :class="['chord-button', { 'highlighted': isActiveChord(chordRoot + chordType) }]"
         @mousedown="activateChord(chordRoot, chordType)"
         @mouseup="deactivateChord()"
       >
@@ -25,9 +25,20 @@ export default {
       chordTypes: ['', 'm', '7', 'm7', 'maj7', 'dim', 'aug'],
       notesSequence: ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'],  
       // その他のデータ...
+      activeChord: null,
     };
   },
+  created() {
+    EventBus.on('highlight-chord', this.setActiveChord);
+  },
   methods: {
+    setActiveChord(chord) {
+      this.activeChord = chord;
+      console.log("setActiveChord " + chord)
+    },
+    isActiveChord(chord) {
+      return this.activeChord === chord;
+    },
     activateChord(chordRoot, chordType) {
       // 音名をインデックスに変換する関数
       const noteToIndex = (note) => {
@@ -108,6 +119,10 @@ export default {
   margin: 2px;
   width: 60px;
   height: 40px;
+}
+
+.highlighted {
+  background-color: #0F0;
 }
 </style>
 

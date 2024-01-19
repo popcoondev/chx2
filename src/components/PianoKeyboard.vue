@@ -101,7 +101,144 @@ export default {
     toggleNote(note) {
       // ノートのアクティブ状態を切り替える
       note.isActive = !note.isActive;
-    }
+      this.checkForChord();
+    },
+    checkForChord() {
+      console.log("checkForChord");
+      let chordFound = false;
+      const activeNotes = this.notes.filter(note => note.isActive).map(note => note.label);
+      const chords = {
+        // C系コード
+        'C': ['C', 'E', 'G'],
+        'Cm': ['C', 'D#', 'G'],
+        'C7': ['C', 'E', 'G', 'A#'],
+        'Cm7': ['C', 'D#', 'G', 'A#'],
+        'Cmaj7': ['C', 'E', 'G', 'B'],
+        'Cdim': ['C', 'D#', 'F#'],
+        'Caug': ['C', 'E', 'G#'],
+
+        // C#系コード
+        'C#': ['C#', 'F', 'G#'],
+        'C#m': ['C#', 'E', 'G#'],
+        'C#7': ['C#', 'F', 'G#', 'B'],
+        'C#m7': ['C#', 'E', 'G#', 'B'],
+        'C#maj7': ['C#', 'F', 'G#', 'C'],
+        'C#dim': ['C#', 'E', 'G'],
+        'C#aug': ['C#', 'F', 'A'],
+
+        // D系コード
+        'D': ['D', 'F#', 'A'],
+        'Dm': ['D', 'F', 'A'],
+        'D7': ['D', 'F#', 'A', 'C'],
+        'Dm7': ['D', 'F', 'A', 'C'],
+        'Dmaj7': ['D', 'F#', 'A', 'C#'],
+        'Ddim': ['D', 'F', 'G#'],
+        'Daug': ['D', 'F#', 'A#'],
+
+        // D#系コード
+        'D#': ['D#', 'G', 'A#'],
+        'D#m': ['D#', 'F#', 'A#'],
+        'D#7': ['D#', 'G', 'A#', 'C#'],
+        'D#m7': ['D#', 'F#', 'A#', 'C#'],
+        'D#maj7': ['D#', 'G', 'A#', 'D'],
+        'D#dim': ['D#', 'F#', 'A'],
+        'D#aug': ['D#', 'G', 'B'],
+
+        // E系コード
+        'E': ['E', 'G#', 'B'],
+        'Em': ['E', 'G', 'B'],
+        'E7': ['E', 'G#', 'B', 'D'],
+        'Em7': ['E', 'G', 'B', 'D'],
+        'Emaj7': ['E', 'G#', 'B', 'D#'],
+        'Edim': ['E', 'G', 'A#'],
+        'Eaug': ['E', 'G#', 'C'],
+
+        // F系コード
+        'F': ['F', 'A', 'C'],
+        'Fm': ['F', 'G#', 'C'],
+        'F7': ['F', 'A', 'C', 'D#'],
+        'Fm7': ['F', 'G#', 'C', 'D#'],
+        'Fmaj7': ['F', 'A', 'C', 'E'],
+        'Fdim': ['F', 'G#', 'B'],
+        'Faug': ['F', 'A', 'C#'],
+
+        // F#系コード
+        'F#': ['F#', 'A#', 'C#'],
+        'F#m': ['F#', 'A', 'C#'],
+        'F#7': ['F#', 'A#', 'C#', 'E'],
+        'F#m7': ['F#', 'A', 'C#', 'E'],
+        'F#maj7': ['F#', 'A#', 'C#', 'F'],
+        'F#dim': ['F#', 'A', 'C'],
+        'F#aug': ['F#', 'A#', 'D'],
+
+        // G系コード
+        'G': ['G', 'B', 'D'],
+        'Gm': ['G', 'A#', 'D'],
+        'G7': ['G', 'B', 'D', 'F'],
+        'Gm7': ['G', 'A#', 'D', 'F'],
+        'Gmaj7': ['G', 'B', 'D', 'F#'],
+        'Gdim': ['G', 'A#', 'C#'],
+        'Gaug': ['G', 'B', 'D#'],
+
+        // G#系コード
+        'G#': ['G#', 'C', 'D#'],
+        'G#m': ['G#', 'B', 'D#'],
+        'G#7': ['G#', 'C', 'D#', 'F#'],
+        'G#m7': ['G#', 'B', 'D#', 'F#'],
+        'G#maj7': ['G#', 'C', 'D#', 'G'],
+        'G#dim': ['G#', 'B', 'D'],
+        'G#aug': ['G#', 'C', 'E'],
+
+        // A系コード
+        'A': ['A', 'C#', 'E'],
+        'Am': ['A', 'C', 'E'],
+        'A7': ['A', 'C#', 'E', 'G'],
+        'Am7': ['A', 'C', 'E', 'G'],
+        'Amaj7': ['A', 'C#', 'E', 'G#'],
+        'Adim': ['A', 'C', 'D#'],
+        'Aaug': ['A', 'C#', 'F'],
+
+        // A#系コード
+        'A#': ['A#', 'D', 'F'],
+        'A#m': ['A#', 'C#', 'F'],
+        'A#7': ['A#', 'D', 'F', 'G#'],
+        'A#m7': ['A#', 'C#', 'F', 'G#'],
+        'A#maj7': ['A#', 'D', 'F', 'A'],
+        'A#dim': ['A#', 'C#', 'E'],
+        'A#aug': ['A#', 'D', 'F#'],
+
+        // B系コード
+        'B': ['B', 'D#', 'F#'],
+        'Bm': ['B', 'D', 'F#'],
+        'B7': ['B', 'D#', 'F#', 'A'],
+        'Bm7': ['B', 'D', 'F#', 'A'],
+        'Bmaj7': ['B', 'D#', 'F#', 'A#'],
+        'Bdim': ['B', 'D', 'F'],
+        'Baug': ['B', 'D#', 'G'],
+      };
+
+      for (let chord in chords) {
+        const chordNotes = chords[chord];
+
+        //if (chords[chord].every(note => activeNotes.includes(note))) {
+        if (chordNotes.every(note => activeNotes.includes(note)) &&
+          activeNotes.every(note => chordNotes.includes(note))) {
+
+          this.highlightChord(chord);
+          chordFound = true;
+          break;
+        }
+      }
+
+      // コードが見つからなかった場合、ハイライトを解除
+      if (!chordFound) {
+        this.highlightChord(null);
+      }
+    },
+    highlightChord(chord) {
+      console.log("highlightChord");
+      EventBus.emit('highlight-chord', chord);
+    },
   },
 
 };
