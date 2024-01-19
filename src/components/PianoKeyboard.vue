@@ -4,8 +4,8 @@
     <button
       v-for="note in notes"
       :key="note.label"
-      :class="['keyboard-key', note.color, { 'active': note.isActive }]"
-
+      :class="['keyboard-key', note.color, 'octave-' + note.octave, { 'active': note.isActive }]"
+      @click="toggleNote(note)"
     >
       {{ note.label }}
 
@@ -97,6 +97,10 @@ export default {
       this.notes.forEach(note => {
         note.isActive = false;
       });
+    },
+    toggleNote(note) {
+      // ノートのアクティブ状態を切り替える
+      note.isActive = !note.isActive;
     }
   },
 
@@ -114,29 +118,55 @@ export default {
 .keyboard-key {
   aspect-ratio: 1 / 1;
   width: 80px;
-  border: 1px solid #ddd;
+  border: 4px solid #000;
 }
 
 .keyboard-key.cyan {
   background-color: #00ffff; /* メジャー音 */
-  opacity: 0.6;
+  
 }
 
 .keyboard-key.gray {
   background-color: #c0c0c0; /* マイナー音 */
-  opacity: 0.6;
+  
 }
 
 .keyboard-key.pink {
   background-color: #ff00ff; /* C音 */
-  opacity: 0.6;
+  
 }
 
 .keyboard-key.active {
   background-color: #00FF00; /* アクティブなキーを緑色に */
+
 }
 
 .keyboard-octave {
   font-size: 8px;
+}
+
+.keyboard-key.octave-1 {
+  border: 4px solid #A00;
+}
+.keyboard-key.octave-2 {
+  border: 4px solid #A50;
+}
+.keyboard-key.octave-3 {
+  border: 4px solid #AA0;
+}
+.keyboard-key.octave-4 {
+  border: 4px solid #5A5;
+}
+.keyboard-key.octave-5 {
+  border: 4px solid #0A5;
+}
+.keyboard-key.octave-6 {
+  border: 4px solid #0AA;
+}
+.keyboard-key.octave-7 {
+  border: 4px solid #5AA;
+}
+.keyboard-key.octave-8 {
+  border: 4px solid #AAA;
 }
 </style>

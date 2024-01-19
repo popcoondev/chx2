@@ -20,9 +20,14 @@ export default {
 
 
 <style>
+body {
+  background: #222;
+}
+
 #app {
   display: flex;
   flex-direction: row;
+
 }
 .keyboard-container {
   flex: 6;

@@ -39,17 +39,46 @@ export default {
 
       // コード構成音のインデックスを計算
       let chordNotes = [chordRoot]; // 根音を含む
-      if (chordType === '' || chordType === '7') {
-        // メジャーコードまたはセブンスコードの場合
-        chordNotes.push(this.notesSequence[(rootIndex + 4) % 12]); // 長3度
-        chordNotes.push(this.notesSequence[(rootIndex + 7) % 12]); // 完全5度
-      } else if (chordType === 'm') {
-        // マイナーコードの場合
-        chordNotes.push(this.notesSequence[(rootIndex + 3) % 12]); // 短3度
-        chordNotes.push(this.notesSequence[(rootIndex + 7) % 12]); // 完全5度
-      }
-      if (chordType === '7') {
-        chordNotes.push(this.notesSequence[(rootIndex + 10) % 12]); // 短7度
+      switch (chordType) {
+        case '':
+          // メジャーコード
+          chordNotes.push(this.notesSequence[(rootIndex + 4) % 12]);
+          chordNotes.push(this.notesSequence[(rootIndex + 7) % 12]);
+          break;
+        case 'm':
+          // マイナーコード
+          chordNotes.push(this.notesSequence[(rootIndex + 3) % 12]);
+          chordNotes.push(this.notesSequence[(rootIndex + 7) % 12]);
+          break;
+        case '7':
+          // セブンスコード
+          chordNotes.push(this.notesSequence[(rootIndex + 4) % 12]);
+          chordNotes.push(this.notesSequence[(rootIndex + 7) % 12]);
+          chordNotes.push(this.notesSequence[(rootIndex + 10) % 12]);
+          break;
+        case 'm7':
+          // マイナーセブンスコード
+          chordNotes.push(this.notesSequence[(rootIndex + 3) % 12]);
+          chordNotes.push(this.notesSequence[(rootIndex + 7) % 12]);
+          chordNotes.push(this.notesSequence[(rootIndex + 10) % 12]);
+          break;
+        case 'maj7':
+          // メジャーセブンスコード
+          chordNotes.push(this.notesSequence[(rootIndex + 4) % 12]);
+          chordNotes.push(this.notesSequence[(rootIndex + 7) % 12]);
+          chordNotes.push(this.notesSequence[(rootIndex + 11) % 12]);
+          break;
+        case 'dim':
+          // 減五度コード
+          chordNotes.push(this.notesSequence[(rootIndex + 3) % 12]);
+          chordNotes.push(this.notesSequence[(rootIndex + 6) % 12]);
+          break;
+        case 'aug':
+          // 増五度コード
+          chordNotes.push(this.notesSequence[(rootIndex + 4) % 12]);
+          chordNotes.push(this.notesSequence[(rootIndex + 8) % 12]);
+          break;
+        // その他のコードタイプを追加する場合はここに追加
       }
 
       chordNotes.forEach(note => {
