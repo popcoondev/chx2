@@ -31,7 +31,7 @@ import { EventBus } from './eventBus.js';
 export default {
   data() {
     return {
-      chordRoots: ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B'],
+      chordRoots: ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G♯', 'A', 'A#', 'B'],
       chordTypes: ['', 'm', '7', 'm7', 'maj7', 'dim', 'aug'],
       notesSequence: ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'],  
       // その他のデータ...
@@ -63,6 +63,7 @@ export default {
     handleMouseUp() {
       if (this.mode === 'click') {
         this.deactivateChord();
+        this.setActiveChord(null);
       }
     },
     setActiveChord(chord) {
@@ -141,19 +142,23 @@ export default {
 
 /* ChordGrid.vue のスタイル */
 <style>
-.chord-container {
-    display: flex;
-    flex-direction: column;
+.mode-selector {
+  margin-bottom: 10px;
+  /* その他のスタイリング */
 }
 
-.mode-selector {
-    margin-bottom: 10px;
-    /* その他のスタイリング */
+.mode-selector label {
+  color: white; /* ここに希望のカラーコードを設定 */
+  /* その他のスタイリング */
+}
+
+.mode-selector input[type="radio"] {
+  /* ラジオボタンのスタイリング（必要に応じて） */
 }
 
 .chord-grid {
   display: grid;
-  grid-template-columns: repeat(12, 1fr); /* 12列のグリッドを定義 */
+  grid-template-columns: repeat(7, 60px); /* 7列のグリッドを定義 */
   grid-gap: 2px;
 }
 

@@ -1,30 +1,46 @@
 
 <template>
-  <div class="piano-keyboard">
-    <button
-      v-for="note in notes"
-      :key="note.label"
-      :class="['keyboard-key', note.color, 'octave-' + note.octave, { 'active': note.isActive }]"
-      @click="toggleNote(note)"
-    >
-      {{ note.label }}
+  <div class="keyboard-container">
+    <div class="midi-controller">
+      <button class="setup-midi" @click="setupMIDI">Setup MIDI Devices</button>
+    </div>
+    <div class="piano-keyboard">
+      <button
+        v-for="note in notes"
+        :key="note.label"
+        :class="[
+          'keyboard-key', 
+          note.color, 
+          note.label !== 'C' ? 'octave-' + note.octave : '', 
+          { 'active': note.isActive }]"
+        @click="toggleNote(note)"
+      >
+        {{ note.label }}
 
-    </button>
+      </button>
+    </div>
   </div>
 </template>
 
 <script>
 import { EventBus } from './eventBus.js';
+import * as MidiController from '@/components/midiController';
+
 export default {
   name: "PianoKeyboard",
   data() {
     return {
       notes: this.generateChromaticNotes(),
+      // MIDIデバイスの接続状態を管理するためのデータ
+      midiConnected: false,
     };
   },
   created() {
     EventBus.on('activate-note', this.activateNote);
     EventBus.on('inactivate-note', this.inactivateNote);
+    EventBus.on('activate-note-from-midi', this.activateNoteFromMidi);
+    EventBus.on('deactivate-note-from-midi', this.deactivateNoteFromMidi);
+    this.setupMIDI();
   },
   mounted() {
     EventBus.on('activate-note', this.activateNote);
@@ -35,6 +51,22 @@ export default {
     EventBus.off('inactivate-note', this.inactivateNote);
   },
   methods: {
+    someMethod() {
+      const outputs = MidiController.getOutputDevices();
+      const midiOutput = outputs[0]; // 最初のMIDI出力デバイスを使用
+      const message = [0x90, 0x45, 0x7f]; // 送信するMIDIメッセージ
+      MidiController.sendMIDIMessage(message, midiOutput); // MIDIメッセージを送信
+    },
+    async setupMIDI() {
+      console.log('setupMIDI');
+      try {
+        await MidiController.setupMIDIDevices();
+        this.midiConnected = true;
+        console.log('MIDI devices are set up');
+      } catch (error) {
+        console.error('Failed to set up MIDI devices', error);
+      }
+    },
     generateChromaticNotes() {
       const notesSequence = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
       let notes = [];
@@ -42,7 +74,7 @@ export default {
         for (let j = 0; j < 8; j++) { // 各行に8つのノートを配置
           const noteIndex = (i + j * 5) % 12; // 4度の間隔でノートを配置
           const octave = Math.floor((i + j * 5) / 12) + 2; // オクターブを追加（C1から始まるように+2）
-          //const label = notesSequence[noteIndex] + octave;
+
           const label = notesSequence[noteIndex];
           let color = 'cyan'; // デフォルトはメジャー音（水色）
           if (label.includes('#')) {
@@ -88,8 +120,6 @@ export default {
           note.isActive = true;
         });
       }
-
-      // 必要に応じて、他のロジックをここに追加
     },
     inactivateNote() {
       console.log("inactivateNote");
@@ -97,6 +127,28 @@ export default {
       this.notes.forEach(note => {
         note.isActive = false;
       });
+    },
+    activateNoteFromMidi(midiNote) {
+      const appNote = this.convertMidiNoteToAppNote(midiNote);
+      const notesToActivate = this.notes.filter(note => 
+        note.label === appNote.note && note.octave === appNote.octave
+      );
+
+      notesToActivate.forEach(note => {
+        note.isActive = true;
+      });
+
+      this.checkForChord();
+    },
+    deactivateNoteFromMidi() {
+      this.inactivateNote();
+    },
+    convertMidiNoteToAppNote(midiNote) {
+      const notesSequence = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+      const noteIndex = midiNote % 12;
+      const octave = Math.floor(midiNote / 12) - 1; // MIDIオクターブはC-1から始まるため、1を減算
+      const note = notesSequence[noteIndex];
+      return { note, octave };
     },
     toggleNote(note) {
       // ノートのアクティブ状態を切り替える
@@ -246,6 +298,10 @@ export default {
 </script>
 
 <style>
+.midi-controller {
+  margin: 10px;
+}
+
 .piano-keyboard {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
@@ -255,7 +311,7 @@ export default {
 .keyboard-key {
   aspect-ratio: 1 / 1;
   width: 80px;
-  border: 4px solid #000;
+  border: 3px solid #000;
 }
 
 .keyboard-key.cyan {
@@ -270,7 +326,7 @@ export default {
 
 .keyboard-key.pink {
   background-color: #ff00ff; /* C音 */
-  
+  border-color: #AA00AA;  
 }
 
 .keyboard-key.active {
@@ -283,27 +339,27 @@ export default {
 }
 
 .keyboard-key.octave-1 {
-  border: 4px solid #A00;
+  border-color: #A00;
 }
 .keyboard-key.octave-2 {
-  border: 4px solid #A50;
+  border-color: #A50;
 }
 .keyboard-key.octave-3 {
-  border: 4px solid #AA0;
+  border-color: #AA0;
 }
 .keyboard-key.octave-4 {
-  border: 4px solid #5A5;
+  border-color: #5A5;
 }
 .keyboard-key.octave-5 {
-  border: 4px solid #0A5;
+  border-color: #0A5;
 }
 .keyboard-key.octave-6 {
-  border: 4px solid #0AA;
+  border-color: #0AA;
 }
 .keyboard-key.octave-7 {
-  border: 4px solid #5AA;
+  border-color: #5AA;
 }
 .keyboard-key.octave-8 {
-  border: 4px solid #AAA;
+  border-color: #AAA;
 }
 </style>
