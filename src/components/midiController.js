@@ -9,7 +9,7 @@ let inputDevices = [];
 let outputDevices = [];
 
 // MIDIデバイスのセットアップを行う関数
-export async function setupMIDIDevices() {
+export async function connectMIDIDevices() {
   try {
     midiAccess = await navigator.requestMIDIAccess();
 
@@ -64,6 +64,14 @@ export function sendMIDIMessage(message, midiOutput = null) {
     outputDevices.forEach(output => output.send(message));
   }
   console.log('MIDI message sent', message);
+}
+
+// MIDIデバイスのリリースを行う関数
+export function disconnectMIDIDevices() {
+  midiAccess.inputs.forEach(input => input.onmidimessage = null);
+  midiAccess = null;
+  inputDevices = [];
+  outputDevices = [];
 }
 
 // 出力デバイスを取得する関数
