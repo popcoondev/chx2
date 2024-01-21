@@ -9,6 +9,9 @@ let inputDevices = [];
 let outputDevices = [];
 let launchpadDevice = null;
 
+const notesSequence = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+
+
 // Launchpad XにMIDIメッセージを送信する関数
 export function sendToLaunchpad(message) {
   if (launchpadDevice) {
@@ -113,4 +116,10 @@ export function getOutputDevices() {
 // 入力デバイスを取得する関数
 export function getInputDevices() {
   return inputDevices;
+}
+
+// noteToMidiKeyを取得する関数
+export function getNoteToMidiKey(note, octave) {
+  const noteIndex = notesSequence.indexOf(note);
+  return 12 * octave + noteIndex;
 }

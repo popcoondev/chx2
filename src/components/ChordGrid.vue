@@ -28,6 +28,8 @@
 
 <script>
 import { EventBus } from './eventBus.js';
+import * as MidiController from '@/components/midiController';
+
 export default {
   data() {
     return {
@@ -68,7 +70,7 @@ export default {
     },
     setActiveChord(chord) {
       this.activeChord = chord;
-      console.log("setActiveChord " + chord)
+      console.log("setActiveChord " + chord);
     },
     isActiveChord(chord) {
       return this.activeChord === chord;
@@ -173,12 +175,25 @@ export default {
       }
 
       chordNotes.forEach(note => {
+        console.log("activateChord " + note);
         EventBus.emit('activate-note', note);
+
+        // 全てのoctaveに送信するループ
+        for(let octave = 0; octave < 8; octave++) {
+          let midikey = MidiController.getNoteToMidiKey(note,octave);
+          console.log("getNoteToMidiKey " + midikey);
+          MidiController.lightUpPad(midikey);
+        }        
       });
+      
     },
     deactivateChord() {
       console.log("deactivateChord");
       EventBus.emit('inactivate-note');
+      // 全てのMIDIキーボードを消灯するループ
+      for(let midikey = 0; midikey < 128; midikey++) {
+        MidiController.lightDownPad(midikey);
+      }
     }
   },
 
