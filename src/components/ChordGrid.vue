@@ -28,7 +28,6 @@
 
 <script>
 import { EventBus } from './eventBus.js';
-
 export default {
   data() {
     return {

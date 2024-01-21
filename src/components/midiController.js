@@ -7,6 +7,14 @@ let midiAccess = null;
 // 成功時のMIDIアクセスオブジェクトを保持する変数
 let inputDevices = [];
 let outputDevices = [];
+let launchpadDevice = null;
+
+// Launchpad XにMIDIメッセージを送信する関数
+export function sendToLaunchpad(message) {
+  if (launchpadDevice) {
+    launchpadDevice.send(message);
+  }
+}
 
 // MIDIデバイスのセットアップを行う関数
 export async function connectMIDIDevices() {
@@ -21,6 +29,13 @@ export async function connectMIDIDevices() {
 
     // 出力デバイスを配列にセットアップ
     outputDevices = Array.from(midiAccess.outputs.values());
+    
+    // Launchpad Xを特定する
+    outputDevices.forEach(output => {
+      if (output.name.includes('Launchpad X')) {
+        launchpadDevice = output;
+      }
+    });
 
     console.log('MIDI access obtained', midiAccess);
     console.log('MIDI Inputs:', inputDevices);
@@ -28,6 +43,20 @@ export async function connectMIDIDevices() {
   } catch (error) {
     console.error('MIDI access denied', error);
   }
+}
+
+// Launchpad Xのパッドを光らせる関数
+export function lightUpPad(note) {
+  // ノートオンメッセージのフォーマット：[0x90, note, velocity]
+  sendToLaunchpad([0x90, note, 127]);
+}
+
+// MIDIメッセージを送信してパッドを消灯させる関数
+export function lightDownPad(note) {
+  // MIDIノートオフメッセージは 0x80 (128) ステータスバイトから始まります。
+  //const message = [0x80, midiNote, 0]; // 0 ベロシティは光を消す
+  //outputDevices.forEach(output => output.send(message));
+  sendToLaunchpad([0x80, note, 0]);
 }
 
 // MIDIメッセージを受け取ったときの処理を行う関数
@@ -72,6 +101,8 @@ export function disconnectMIDIDevices() {
   midiAccess = null;
   inputDevices = [];
   outputDevices = [];
+  launchpadDevice = null;
+  console.log('MIDI access released');
 }
 
 // 出力デバイスを取得する関数

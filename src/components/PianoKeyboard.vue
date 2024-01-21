@@ -4,7 +4,7 @@
     <div class="midi-controller">
       <button class="midi-button connect-midi" @click="connectMIDI">Connect MIDI</button>
       <button class="midi-button disconnect-midi" @click="disconnectMIDI">Disconnect MIDI</button>
-      
+      <button class="midi-button" @click="someMethod">MIDI TEST</button>
       <div class="midi-connection-status" :class="{ 'connected': midiConnected }">
         {{ midiConnected ? 'Connected' : 'Not Connected' }}
       </div>
@@ -30,159 +30,8 @@
 <script>
 import { EventBus } from './eventBus.js';
 import * as MidiController from '@/components/midiController';
-
-export default {
-  name: "PianoKeyboard",
-  data() {
-    return {
-      notes: this.generateChromaticNotes(),
-      // MIDIデバイスの接続状態を管理するためのデータ
-      midiConnected: false,
-    };
-  },
-  created() {
-    EventBus.on('activate-note', this.activateNote);
-    EventBus.on('inactivate-note', this.inactivateNote);
-    EventBus.on('activate-note-from-midi', this.activateNoteFromMidi);
-    EventBus.on('deactivate-note-from-midi', this.deactivateNoteFromMidi);
-    this.connectMIDI();
-  },
-  mounted() {
-    EventBus.on('activate-note', this.activateNote);
-    EventBus.on('inactivate-note', this.inactivateNote);
-  },
-  beforeUnmount() {
-    EventBus.off('activate-note', this.activateNote);
-    EventBus.off('inactivate-note', this.inactivateNote);
-  },
-  methods: {
-    someMethod() {
-      const outputs = MidiController.getOutputDevices();
-      const midiOutput = outputs[0]; // 最初のMIDI出力デバイスを使用
-      const message = [0x90, 0x45, 0x7f]; // 送信するMIDIメッセージ
-      MidiController.sendMIDIMessage(message, midiOutput); // MIDIメッセージを送信
-    },
-    async connectMIDI() {
-      console.log('connectMIDI');
-      try {
-        await MidiController.connectMIDIDevices();
-        this.midiConnected = true;
-        console.log('MIDI devices are set up');
-      } catch (error) {
-        console.error('Failed to set up MIDI devices', error);
-      }
-    },
-    async disconnectMIDI() {
-      console.log('disconnectMIDI');
-      try {
-        await MidiController.disconnectMIDIDevices();
-        this.midiConnected = false;
-        console.log('MIDI devices are disconnected');
-      } catch (error) {
-        console.error('Failed to disconnect MIDI devices', error);
-      }
-    },
-    generateChromaticNotes() {
-      const notesSequence = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-      let notes = [];
-      for (let i = 0; i < 8; i++) { // 8行分のノートを生成
-        for (let j = 0; j < 8; j++) { // 各行に8つのノートを配置
-          const noteIndex = (i + j * 5) % 12; // 4度の間隔でノートを配置
-          const octave = Math.floor((i + j * 5) / 12) + 2; // オクターブを追加（C1から始まるように+2）
-
-          const label = notesSequence[noteIndex];
-          let color = 'cyan'; // デフォルトはメジャー音（水色）
-          if (label.includes('#')) {
-            color = 'gray'; // マイナー音（灰色）
-          }
-          if (notesSequence[noteIndex] === 'C') {
-            color = 'pink'; // C音（ピンク色）
-          }
-          notes.push({ label, color, octave });
-        }
-      }
-
-      // 配列を左90度回転
-      // 1次元配列を8x8の二次元配列に変換
-      let notes2D = [];
-      while(notes.length) notes2D.push(notes.splice(0,8));
-
-      //output用の配列定義
-      var rotatedNotes = new Array(8);
-      for(let i=0; i<8; i++) rotatedNotes[i] = new Array(8).fill(0);
-
-      // 配列を90度回転
-      let x,y;
-      for(let i = 0; i < 8; i++) {
-        x = i;
-        for(let j = 0; j < 8; j++) {
-          y = 7 - j;
-          rotatedNotes[y][x] = notes2D[i][j];
-        }
-      }
-      
-      // 二次元配列を1次元配列にフラット化
-      let flatRotatedNotes = rotatedNotes.flat();
-
-      return flatRotatedNotes;
-    },
-    activateNote(noteLabel) {
-      // 指定されたノートをアクティブに設定
-      let notesToActivate = this.notes.filter(note => note.label === noteLabel);
-      console.log(notesToActivate);  // この行を追加
-      if (notesToActivate) {
-        notesToActivate.forEach(note => {
-          note.isActive = true;
-        });
-      }
-    },
-    inactivateNote() {
-      console.log("inactivateNote");
-      // 全てのノートを非アクティブに設定（オプション）
-      this.notes.forEach(note => {
-        note.isActive = false;
-      });
-    },
-    activateNoteFromMidi(midiNote) {
-      const appNote = this.convertMidiNoteToAppNote(midiNote);
-      const notesToActivate = this.notes.filter(note => 
-        note.label === appNote.note && note.octave === appNote.octave
-      );
-
-      notesToActivate.forEach(note => {
-        note.isActive = true;
-      });
-
-      this.checkForChord();
-    },
-    deactivateNoteFromMidi(midiNote) {
-      const appNote = this.convertMidiNoteToAppNote(midiNote);
-      const notesToDeactivate = this.notes.filter(note => 
-        note.label === appNote.note && note.octave === appNote.octave
-      );
-
-      notesToDeactivate.forEach(note => {
-        note.isActive = false;
-      });
-    },
-    convertMidiNoteToAppNote(midiNote) {
-      const notesSequence = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-      const noteIndex = midiNote % 12;
-      const octave = Math.floor(midiNote / 12) - 1; // MIDIオクターブはC-1から始まるため、1を減算
-      const note = notesSequence[noteIndex];
-      return { note, octave };
-    },
-    toggleNote(note) {
-      // ノートのアクティブ状態を切り替える
-      note.isActive = !note.isActive;
-      this.checkForChord();
-    },
-    checkForChord() {
-      console.log("checkForChord");
-      let chordFound = false;
-      const activeNotes = this.notes.filter(note => note.isActive).map(note => note.label);
-      
-      const chords = {
+const notesSequence = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+const chords = {
         // C系コード
         'C': ['C', 'E', 'G'],
         'Cm': ['C', 'D#', 'G'],
@@ -204,8 +53,6 @@ export default {
         'Cm9': ['C', 'D#', 'G', 'A#', 'D'],
         'Cm11': ['C', 'D#', 'G', 'A#', 'D', 'F'],
         'Cm13': ['C', 'D#', 'G', 'A#', 'D', 'F', 'B'],
-        
-
 
         // C#系コード
         'C#': ['C#', 'F', 'G#'],
@@ -450,6 +297,157 @@ export default {
         'Bm13': ['B', 'D', 'F#', 'A', 'D#', 'E', 'G#'],
       };
 
+export default {
+  name: "PianoKeyboard",
+  data() {
+    return {
+      notes: this.generateChromaticNotes(),
+      // MIDIデバイスの接続状態を管理するためのデータ
+      midiConnected: false,
+    };
+  },
+  created() {
+    EventBus.on('activate-note', this.activateNote);
+    EventBus.on('inactivate-note', this.inactivateNote);
+    EventBus.on('activate-note-from-midi', this.activateNoteFromMidi);
+    EventBus.on('deactivate-note-from-midi', this.deactivateNoteFromMidi);
+    this.connectMIDI();
+    this.inactivateNote();
+  },
+  mounted() {
+    EventBus.on('activate-note', this.activateNote);
+    EventBus.on('inactivate-note', this.inactivateNote);
+  },
+  beforeUnmount() {
+    EventBus.off('activate-note', this.activateNote);
+    EventBus.off('inactivate-note', this.inactivateNote);
+  },
+  methods: {
+    someMethod() {
+      const outputs = MidiController.getOutputDevices();
+      const midiOutput = outputs[0]; // 最初のMIDI出力デバイスを使用
+      const message = [0x90, 0x45, 0x7f]; // 送信するMIDIメッセージ
+      MidiController.sendMIDIMessage(message, midiOutput); // MIDIメッセージを送信
+    },
+    async connectMIDI() {
+      console.log('connectMIDI');
+      try {
+        await MidiController.connectMIDIDevices();
+        this.midiConnected = true;
+        console.log('MIDI devices are set up');
+      } catch (error) {
+        console.error('Failed to set up MIDI devices', error);
+      }
+    },
+    async disconnectMIDI() {
+      console.log('disconnectMIDI');
+      try {
+        await MidiController.disconnectMIDIDevices();
+        this.midiConnected = false;
+        console.log('MIDI devices are disconnected');
+      } catch (error) {
+        console.error('Failed to disconnect MIDI devices', error);
+      }
+    },
+    generateChromaticNotes() {
+      let notes = [];
+      for (let i = 0; i < 8; i++) { // 8行分のノートを生成
+        for (let j = 0; j < 8; j++) { // 各行に8つのノートを配置
+          const noteIndex = (i + j * 5) % 12; // 4度の間隔でノートを配置
+          const octave = Math.floor((i + j * 5) / 12) + 2; // オクターブを追加（C1から始まるように+2）
+
+          const label = notesSequence[noteIndex];
+          let color = 'cyan'; // デフォルトはメジャー音（水色）
+          if (label.includes('#')) {
+            color = 'gray'; // マイナー音（灰色）
+          }
+          if (notesSequence[noteIndex] === 'C') {
+            color = 'pink'; // C音（ピンク色）
+          }
+          notes.push({ label, color, octave });
+        }
+      }
+
+      // 配列を左90度回転
+      // 1次元配列を8x8の二次元配列に変換
+      let notes2D = [];
+      while(notes.length) notes2D.push(notes.splice(0,8));
+
+      //output用の配列定義
+      var rotatedNotes = new Array(8);
+      for(let i=0; i<8; i++) rotatedNotes[i] = new Array(8).fill(0);
+
+      // 配列を90度回転
+      let x,y;
+      for(let i = 0; i < 8; i++) {
+        x = i;
+        for(let j = 0; j < 8; j++) {
+          y = 7 - j;
+          rotatedNotes[y][x] = notes2D[i][j];
+        }
+      }
+      
+      // 二次元配列を1次元配列にフラット化
+      let flatRotatedNotes = rotatedNotes.flat();
+
+      return flatRotatedNotes;
+    },
+    activateNote(noteLabel) {
+      // 指定されたノートをアクティブに設定
+      let notesToActivate = this.notes.filter(note => note.label === noteLabel);
+      console.log(notesToActivate);  // この行を追加
+      if (notesToActivate) {
+        notesToActivate.forEach(note => {
+          note.isActive = true;
+        });
+      }
+    },
+    inactivateNote() {
+      console.log("inactivateNote");
+      // 全てのノートを非アクティブに設定（オプション）
+      this.notes.forEach(note => {
+        note.isActive = false;
+      });
+    },
+    activateNoteFromMidi(midiNote) {
+      const appNote = this.convertMidiNoteToAppNote(midiNote);
+      const notesToActivate = this.notes.filter(note => 
+        note.label === appNote.note && note.octave === appNote.octave
+      );
+
+      notesToActivate.forEach(note => {
+        note.isActive = true;
+      });
+
+      this.checkForChord();
+    },
+    deactivateNoteFromMidi(midiNote) {
+      const appNote = this.convertMidiNoteToAppNote(midiNote);
+      const notesToDeactivate = this.notes.filter(note => 
+        note.label === appNote.note && note.octave === appNote.octave
+      );
+
+      notesToDeactivate.forEach(note => {
+        note.isActive = false;
+      });
+    },
+    convertMidiNoteToAppNote(midiNote) {
+      
+      const noteIndex = midiNote % 12;
+      const octave = Math.floor(midiNote / 12) - 1; // MIDIオクターブはC-1から始まるため、1を減算
+      const note = notesSequence[noteIndex];
+      return { note, octave };
+    },
+    toggleNote(note) {
+      // ノートのアクティブ状態を切り替える
+      note.isActive = !note.isActive;
+      this.checkForChord();
+    },
+    checkForChord() {
+      console.log("checkForChord");
+      let chordFound = false;
+      const activeNotes = this.notes.filter(note => note.isActive).map(note => note.label);
+      
       for (let chord in chords) {
         const chordNotes = chords[chord];
 
@@ -468,11 +466,10 @@ export default {
       }
     },
     highlightChord(chord) {
-      console.log("highlightChord");
+      console.log("highlightChord " + chord);
       EventBus.emit('highlight-chord', chord);
     },
   },
-
 };
 
 </script>
